@@ -4,19 +4,39 @@
 \alias{TSDT}
 \title{Treatment-Specific Subgroup Detection Tool}
 \usage{
-TSDT(response = NULL, response_type = NULL,
-  survival_model = "kaplan-meier", percentile = 0.5,
-  tree_builder = "rpart", tree_builder_parameters = list(), covariates,
-  trt = NULL, trt_control = 0, permute_method = NULL,
-  permute_arm = NULL, n_samples = 1, desirable_response = NULL,
-  sampling_method = "bootstrap", inbag_proportion = 0.5,
-  scoring_function = NULL, scoring_function_parameters = list(),
-  inbag_score_margin = 0, oob_score_margin = 0, eps = 1e-05,
-  min_subgroup_n_control = NULL, min_subgroup_n_trt = NULL,
-  min_subgroup_n_oob_control = NULL, min_subgroup_n_oob_trt = NULL,
-  maxdepth = .Machine$integer.max, rootcompete = 0,
-  strength_cutpoints = c(0.1, 0.2, 0.3), n_permutations = 0,
-  n_cpu = 1, trace = FALSE)
+TSDT(
+  response = NULL,
+  response_type = NULL,
+  survival_model = "kaplan-meier",
+  percentile = 0.5,
+  tree_builder = "rpart",
+  tree_builder_parameters = list(),
+  covariates,
+  trt = NULL,
+  trt_control = 0,
+  permute_method = NULL,
+  permute_arm = NULL,
+  n_samples = 1,
+  desirable_response = NULL,
+  sampling_method = "bootstrap",
+  inbag_proportion = 0.5,
+  scoring_function = NULL,
+  scoring_function_parameters = list(),
+  inbag_score_margin = 0,
+  oob_score_margin = 0,
+  eps = 1e-05,
+  min_subgroup_n_control = NULL,
+  min_subgroup_n_trt = NULL,
+  min_subgroup_n_oob_control = NULL,
+  min_subgroup_n_oob_trt = NULL,
+  maxdepth = .Machine$integer.max,
+  rootcompete = 0,
+  competedepth = 1,
+  strength_cutpoints = c(0.1, 0.2, 0.3),
+  n_permutations = 0,
+  n_cpu = 1,
+  trace = FALSE
+)
 }
 \arguments{
 \item{response}{Response variable.}
@@ -161,6 +181,8 @@ number of Experimental  observations in the overall sample.}
 
 \item{rootcompete}{Number of competitor splits to retain for root node split.}
 
+\item{competedepth}{Depth of competitor split trees (defaults to 1)}
+
 \item{strength_cutpoints}{Cutpoints for permuted p-values to classify a
 subgroup as Strong, Moderate, Weak, or Not Confirmed. The default cutpoints are
 0.10, 0.20, and 0.30 for Strong, Moderate, and Weak subgroups, respectively. (optional)}
@@ -285,10 +307,10 @@ Shen, L., Battioui, C., Ding, Y., (2013). Chapter "A Framework of Statistical me
 \seealso{
 \link{mean_response}, \link{quantile_response},
 \link{diff_quantile_response}, \link{treatment_effect},
-\link{desirable_response_proportion}, \link{survival_time_quantile},
-\link{diff_survival_time_quantile}, \link{mean_deviance_residuals},
-\link{diff_mean_deviance_residuals}, \link{diff_restricted_mean_survival_time},
-\linkS4class{TSDT}, \link[rpart]{rpart}, \link[party]{ctree}, \link[party]{mob}
+\link{survival_time_quantile}, \link{diff_survival_time_quantile},
+\link{mean_deviance_residuals}, \link{diff_mean_deviance_residuals},
+\link{diff_restricted_mean_survival_time}, \linkS4class{TSDT},
+\link[rpart]{rpart}, \link[party]{ctree}, \link[party]{mob}
 }
 \author{
 Brian Denton \email{denton_brian_david@lilly.com},

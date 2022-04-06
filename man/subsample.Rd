@@ -4,9 +4,15 @@
 \alias{subsample}
 \title{subsample}
 \usage{
-subsample(x, trt = NULL, trt_control = "Control",
-  training_fraction = NULL, validation_fraction = NULL,
-  test_fraction = NULL, n_samples = 1)
+subsample(
+  x,
+  trt = NULL,
+  trt_control = "Control",
+  training_fraction = NULL,
+  validation_fraction = NULL,
+  test_fraction = NULL,
+  n_samples = 1
+)
 }
 \arguments{
 \item{x}{<Source data to subsample.}

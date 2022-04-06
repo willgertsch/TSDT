@@ -18,7 +18,7 @@ Returns a character vector of the specified function's parameters
 \examples{
 ## Define a function
 example_function <- function( parm1, arg2, x, bool = FALSE ){
-  cat( "This is an example function.\\n" )
+  cat( "This is an example function.\n" )
 }
 
 ## Return the function parameter names

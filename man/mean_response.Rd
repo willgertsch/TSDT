@@ -31,17 +31,15 @@ data <- data.frame( continuous_response = numeric(N),
                    trt = character(N) )
 
 data$continuous_response <- runif( min = 0, max = 20, n = N )
-data$trt <- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6),
-                    replace = TRUE )
+data$trt <- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6), replace = TRUE )
 
 ## Compute mean response for all data
-mean_response( data )
+mean_response( data, scoring_function_parameters = list( y_var = 'continuous_response' ) )
 mean( data$continuous_response ) # Function return value should match this value
 
 ## Compute mean response for Experimental treatment arm only
-mean_response( data,
-               scoring_function_parameters = list( trt_arm = 'Experimental' ) )
-
+scoring_function_parameters <- list( y_var = 'continuous_response', trt_arm = 'Experimental' )
+mean_response( data, scoring_function_parameters = scoring_function_parameters )
 # Function return value should match this value
 mean( data$continuous_response[ data$trt == 'Experimental' ] )
 }

@@ -4,8 +4,13 @@
 \alias{mob_wrapper}
 \title{mob_wrapper}
 \usage{
-mob_wrapper(response, x = NULL, z = NULL, covariates = NULL,
-  tree_builder_parameters = list())
+mob_wrapper(
+  response,
+  x = NULL,
+  z = NULL,
+  covariates = NULL,
+  tree_builder_parameters = list()
+)
 }
 \arguments{
 \item{response}{Response variable to use in mob model.}

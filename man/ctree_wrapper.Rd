@@ -4,8 +4,7 @@
 \alias{ctree_wrapper}
 \title{ctree_wrapper}
 \usage{
-ctree_wrapper(response, covariates = NULL,
-  tree_builder_parameters = list())
+ctree_wrapper(response, covariates = NULL, tree_builder_parameters = list())
 }
 \arguments{
 \item{response}{Response variable to use in ctree model.}

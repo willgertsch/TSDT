@@ -4,8 +4,7 @@
 \alias{get_suggested_subgroup}
 \title{get_suggested_subgroup}
 \usage{
-get_suggested_subgroup(anonymized_subgroup, suggested_cutoff,
-  anon = "xxxxx")
+get_suggested_subgroup(anonymized_subgroup, suggested_cutoff, anon = "xxxxx")
 }
 \arguments{
 \item{anonymized_subgroup}{A string containing the the anonymized subgroup.}

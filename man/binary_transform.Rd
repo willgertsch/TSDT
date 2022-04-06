@@ -19,5 +19,6 @@ variable.
 \examples{
 ## Convert a variable that takes values 'A' and 'B' to 0 and 1
 x <- sample( c('A','B'), size = 10, prob = c(0.5,0.5), replace = TRUE )
+print(x);flush.console()
 binary_transform( x )
 }

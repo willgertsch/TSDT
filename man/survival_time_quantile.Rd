@@ -27,11 +27,10 @@ arm.
 }
 \examples{
 N <- 200
-require( survival )
-df <- data.frame( y = survival::Surv( runif( min = 0, max = 20, n = N ),
-                            sample( c(0,1), size = N, prob = c(0.2,0.8), replace = TRUE ) ),
-                  trt = sample( c('Control','Experimental'), size = N,
-                                prob = c(0.4,0.6), replace = TRUE ) )
+time <- runif( min = 0, max = 20, n = N )
+event <- sample( c(0,1), size = N, prob = c(0.2,0.8), replace = TRUE )
+trt <- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6), replace = TRUE )
+df <- data.frame( y = survival::Surv( time, event ), trt = trt )
 
 ## Compute median survival time in Experimental treatment arm.
 ex1 <- survival_time_quantile( data = df,
@@ -44,8 +43,7 @@ ex1 <- survival_time_quantile( data = df,
 ## behavior is to use this variable as the treatment variable. To override
 ## the default behavior trt = NULL is included in scoring_function_parameters.
 ex2 <- survival_time_quantile( data = df,
-                               scoring_function_parameters = list( trt = NULL,
-                                                         percentile = 0.25 ) )
+                               scoring_function_parameters = list( trt = NULL, percentile = 0.25 ) )
 }
 \seealso{
 \link{TSDT}, \link{diff_survival_time_quantile},

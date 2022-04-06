@@ -179,6 +179,7 @@
 #' number of Experimental  observations in the overall sample.
 #' @param maxdepth Maximum depth of trees.
 #' @param rootcompete Number of competitor splits to retain for root node split.
+#' @param competedepth Depth of competitor split trees (defaults to 1)
 #' @param strength_cutpoints Cutpoints for permuted p-values to classify a
 #' subgroup as Strong, Moderate, Weak, or Not Confirmed. The default cutpoints are
 #' 0.10, 0.20, and 0.30 for Strong, Moderate, and Weak subgroups, respectively. (optional)
@@ -189,10 +190,10 @@
 #' @param trace Report number of permutations computed as algorithm proceeds.
 #' @seealso \link{mean_response}, \link{quantile_response},
 #' \link{diff_quantile_response}, \link{treatment_effect},
-#' \link{desirable_response_proportion}, \link{survival_time_quantile},
-#' \link{diff_survival_time_quantile}, \link{mean_deviance_residuals},
-#' \link{diff_mean_deviance_residuals}, \link{diff_restricted_mean_survival_time},
-#' \linkS4class{TSDT}, \link[rpart]{rpart}, \link[party]{ctree}, \link[party]{mob}
+#' \link{survival_time_quantile}, \link{diff_survival_time_quantile},
+#' \link{mean_deviance_residuals}, \link{diff_mean_deviance_residuals},
+#' \link{diff_restricted_mean_survival_time}, \linkS4class{TSDT},
+#' \link[rpart]{rpart}, \link[party]{ctree}, \link[party]{mob}
 #' @return An object of class \linkS4class{TSDT}
 #' @author Brian Denton \email{denton_brian_david@@lilly.com},
 #' Chakib Battioui \email{battioui_chakib@@lilly.com},
@@ -272,14 +273,14 @@ TSDT <- function( response = NULL,
                   min_subgroup_n_oob_trt = NULL,
                   maxdepth = .Machine$integer.max,
                   rootcompete = 0,
+                  competedepth = 1,
                   strength_cutpoints = c(0.10,0.20,0.30),
                   n_permutations = 0,
                   n_cpu = 1,
                   trace = FALSE ){
-  
-  ## Create NULL placeholders to prevent NOTE in R CMD check
-  scoring_function_name <- NULL
-  PID0 <- NULL
+
+  ## Avoid NOTE in R CMD check about no visible binding for global variable
+  PID0 <- scoring_function_name <- Subgroup <- NULL
   
   if( tree_builder %nin% c('rpart','ctree','mob') )
       stop( 'ERROR: tree_builder must be one of {rpart,ctree,mob}' )
@@ -322,6 +323,12 @@ TSDT <- function( response = NULL,
   # If trt provided make sure trt_control value exists in data
   if( !is.null( trt ) && !any( trt == trt_control ) )
       stop( "ERROR: trt_control value not found" )
+
+  ## If trt is NULL make sure other trt-related variables are also NULL
+  if( is.null( trt ) ){
+    trt_control <- NULL
+    permute_arm <- NULL
+  }
   
   # Remove records with missing response
   if( any( is.na( response ) ) ){
@@ -351,13 +358,13 @@ TSDT <- function( response = NULL,
   # Populate response_type if none provided
   if( is.null( response_type ) ){
     
-    if( class( response ) == "Surv" )
+    if( is( response, "Surv" ) )
         response_type <- "survival"
     
-    else if( class( response ) %in% c("character","factor" ) && is.binary( response ) )
+    else if( ( is(response, "character") || is( response, "factor" ) ) && is.binary( response ) )
         response_type <- "binary"
     
-    else if( class( response ) == "numeric" )
+    else if( is( response, "numeric" ) )
         response_type <- "continuous"
     
     else
@@ -444,11 +451,11 @@ TSDT <- function( response = NULL,
 
   ## Reset factor levels
   covariates <- droplevels( covariates )
-  if( class( response ) == 'factor' ){
+  if( is( response, 'factor' ) ){
     response <- droplevels( response )
   }
 
-  if( !is.null( trt ) && class( trt ) == 'factor' ){
+  if( !is.null( trt ) && is( trt, 'factor' ) ){
     trt <- droplevels( trt )
   }
   
@@ -584,6 +591,7 @@ TSDT <- function( response = NULL,
     
   tree_builder_parameters$maxdepth <- maxdepth
   tree_builder_parameters$rootcompete <- rootcompete
+  tree_builder_parameters$competedepth <- competedepth
   
   # Set parameters specific to each tree-building algorithm
   if( tree_builder == "rpart" ){
@@ -650,7 +658,7 @@ TSDT <- function( response = NULL,
   ###############################################################################
 
   for( j in 1:NCOL( source_data ) ){
-    if( class( source_data[,j]  ) == 'character' ){
+    if( is( source_data[,j], 'character') ){
       source_data[,j] <- gsub( pattern = '>=', replacement = '%%__GE__%%', fixed = TRUE, source_data[,j] )
       source_data[,j] <- gsub( pattern = '<=', replacement = '%%__LE__%%', fixed = TRUE, source_data[,j] )
       source_data[,j] <- gsub( pattern = '>',  replacement = '%%__GT__%%', fixed = TRUE, source_data[,j] )
@@ -825,6 +833,8 @@ TSDT <- function( response = NULL,
   for( i in 1:length( TSDT_SAMPLES ) ){
 
     tree__ <- TSDT_SAMPLES[[i]]@subgroups
+    tree__ <- subset( tree__, nchar(trimws(Subgroup)) > 0 )
+    
 
     if( NROW( tree__ ) > 1 ){
     
@@ -855,7 +865,6 @@ TSDT <- function( response = NULL,
           oob_treatment_subgroup__ <- subset( oob_subgroup__, trt != trt_control )
         }
         
-
         # Get generic version of subgroup definition
         generic_subgroup__ <- get_generic_subgroup( tree__$Subgroup[[j]] )
 
@@ -1369,7 +1378,7 @@ TSDT <- function( response = NULL,
       
       ## Convert %%__GE__%% back to >=
       for( j in 1:NCOL( TSDT_SAMPLES[[s]]@inbag ) ){
-        if( class( TSDT_SAMPLES[[s]]@inbag[,j] ) == 'character' ){
+        if( is( TSDT_SAMPLES[[s]]@inbag[,j], 'character' ) ){
           TSDT_SAMPLES[[s]]@inbag[,j] <- gsub( pattern = pattern,
                                                replacement = replacement,
                                                fixed = TRUE,
@@ -1379,7 +1388,7 @@ TSDT <- function( response = NULL,
       rm( j )
       
       for( j in 1:NCOL( TSDT_SAMPLES[[s]]@oob ) ){
-        if( class( TSDT_SAMPLES[[s]]@oob[,j] ) == 'character' ){
+        if( is( TSDT_SAMPLES[[s]]@oob[,j], 'character' ) ){
           TSDT_SAMPLES[[s]]@oob[,j] <- gsub( pattern = pattern,
                                              replacement = replacement,
                                              fixed = TRUE,
@@ -1389,7 +1398,7 @@ TSDT <- function( response = NULL,
       rm( j )
       
       for( j in 1:NCOL( TSDT_SAMPLES[[s]]@subgroups ) ){
-        if( class( TSDT_SAMPLES[[s]]@subgroups[,j] ) == 'character' ){
+        if( is( TSDT_SAMPLES[[s]]@subgroups[,j], 'character' ) ){
           TSDT_SAMPLES[[s]]@subgroups[,j] <- gsub( pattern = pattern,
                                                    replacement = replacement,
                                                    fixed = TRUE,
@@ -1466,6 +1475,7 @@ TSDT <- function( response = NULL,
                                    min_subgroup_n_oob_trt = min_subgroup_n_oob_trt,
                                    maxdepth = maxdepth,
                                    rootcompete = rootcompete,
+                                   competedepth = competedepth,
                                    trt_control = trt_control,
                                    permute_method = as.character( substitute( permute_method ) ),
                                    permute_arm = as.character( substitute( permute_arm ) ),

@@ -40,7 +40,7 @@ desirable_response = 'increasing'.
 Therneau, T.M.,  Grambsch, P.M., and Fleming, T.R. (1990).  Martingale-based
 residuals for survival models.  Biometrika, 77(1), 147-160.
 doi:10.1093/biomet/77.1.147.
-\url{http://biomet.oxfordjournals.org/content/77/1/147}
+\url{https://academic.oup.com/biomet/article/77/1/147/271076}
 }
 \seealso{
 \link{TSDT}, \link[survival]{Surv}, \link[survival]{coxph},

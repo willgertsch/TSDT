@@ -4,8 +4,7 @@
 \alias{parse_party}
 \title{parse_party}
 \usage{
-parse_party(tree, data = NULL, include_subgroups = FALSE,
-  digits = NULL)
+parse_party(tree, data = NULL, include_subgroups = FALSE, digits = NULL)
 }
 \arguments{
 \item{tree}{An object of class BinaryTree or mob resulting from a call to the

@@ -4,8 +4,16 @@
 \alias{bootstrap}
 \title{bootstrap}
 \usage{
-bootstrap(x, trt = NULL, trt_control = "Control", FUN = NULL,
-  varname = NULL, varcol = NULL, arglist = NULL, n_samples = 1)
+bootstrap(
+  x,
+  trt = NULL,
+  trt_control = "Control",
+  FUN = NULL,
+  varname = NULL,
+  varcol = NULL,
+  arglist = NULL,
+  n_samples = 1
+)
 }
 \arguments{
 \item{x}{Source data to bootstrap.}

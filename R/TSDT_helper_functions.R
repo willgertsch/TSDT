@@ -202,22 +202,16 @@ get_scoring_function <- function( scoring_function = NULL,
   # Select scoring_function if none provided
   if( is.null( scoring_function ) ){
     
-    # Default scoring function for continuous response, single-arm is mean_response
-    if( response_type %in% "continuous" && !exists( "trt_var" ) ){
+    # Default scoring function for binary or continuous response, single-arm is mean_response
+    if( response_type %in% c("binary","continuous") && !exists( "trt_var" ) ){
       scoring_function <- mean_response
       scoring_function_name <- "mean_response"
     }
     
-    # Default scoring function for continuous response, two-arm is treatment_effect
-    else if( response_type %in% "continuous" && exists( "trt_var" ) ){
+    # Default scoring function for binary or continuous response, two-arm is treatment_effect
+    else if( response_type %in% c("binary","continuous") && exists( "trt_var" ) ){
       scoring_function <- treatment_effect
       scoring_function_name <- "treatment_effect"
-    }
-    
-    # Default scoring function for binary response is desirable_response_proportion
-    else if( response_type == "binary" ){
-      scoring_function <- desirable_response_proportion
-      scoring_function_name <- "desirable_response_proportion"
     }
 
     else if( response_type == "survival" ){
@@ -269,19 +263,22 @@ get_samples <- function( data, trt, trt_control, n_samples, sampling_method, inb
   }
 }
 
+
 get_superior_subgroups <- function( splits,
                                     desirable_response,
                                     inbag_score_margin,
                                     oob_score_margin,
                                     eps,
                                     scoring_function_parameters = NULL ){
+  
 
-
-  ## Create NULL placeholders to prevent NOTE in R CMD check
-  response_type <- NULL;rm( response_type )
+  ## Avoid NOTE in R CMD check about no visible binding for global variable
+  NodeID <- Subgroup <- response_type <- NULL
   
   unpack_args( scoring_function_parameters )
 
+  splits <- subset( splits, NodeID==1 | nchar(trimws(Subgroup)) > 0 )
+  
   if( response_type != "survival" ){
     inbag_mean_response <- splits$Mean_Inbag_Response  
     oob_mean_response <- splits$Mean_OOB_Response
@@ -291,11 +288,15 @@ get_superior_subgroups <- function( splits,
     oob_mean_response <- splits$OOB_Score
   }
 
+  inbag_mean_response__ <- subset( inbag_mean_response, splits[,"NodeID"]==1 | nchar(trimws(splits[,"Subgroup"])) > 0 )
+  oob_mean_response__ <- subset( oob_mean_response, splits[,"NodeID"]==1 | nchar(trimws(splits[,"Subgroup"])) > 0 )
+  splits__ <- subset( splits, splits[,"NodeID"]==1 | nchar(trimws(splits[,"Subgroup"])) > 0 )
+
   # Identify superior in-bag subgroups                              
-  inbag_superior_subgroup <- superior_subgroups( splits = splits,
-                                                 mean_response = inbag_mean_response,
-                                                 score = splits$Inbag_Score,
-                                                 threshold = splits$Inbag_Score[[1]] + abs(splits$Inbag_Score[[1]]) * inbag_score_margin,
+  inbag_superior_subgroup <- superior_subgroups( splits = splits__,
+                                                 mean_response = inbag_mean_response__,
+                                                 score = splits__$Inbag_Score,
+                                                 threshold = splits__$Inbag_Score[[1]] + abs(splits__$Inbag_Score[[1]]) * inbag_score_margin,
                                                  desirable_response = desirable_response,
                                                  eps = eps )
 
@@ -308,10 +309,10 @@ get_superior_subgroups <- function( splits,
       cat( "\nNOTE: If desirable_response == increasing then inbag_score_margin should be positive\n\n" )
   
   # Identify superior out-of-bag subgroups                              
-  oob_superior_subgroup <- superior_subgroups( splits = splits,
-                                               mean_response = oob_mean_response,
-                                               score = splits$OOB_Score,
-                                               threshold = splits$OOB_Score[[1]] + abs( splits$OOB_Score[[1]] ) * oob_score_margin,
+  oob_superior_subgroup <- superior_subgroups( splits = splits__,
+                                               mean_response = oob_mean_response__,
+                                               score = splits__$OOB_Score,
+                                               threshold = splits__$OOB_Score[[1]] + abs( splits__$OOB_Score[[1]] ) * oob_score_margin,
                                                desirable_response = desirable_response,
                                                eps = eps )
   
@@ -332,7 +333,6 @@ get_superior_subgroups <- function( splits,
   
   return( splits )
 }
-
 
 get_mean_response <- function( splits, data, trt, trt_control ){
 
@@ -565,10 +565,9 @@ populate_tsdt_samples <- function( samples,
       
       # Give competitor splits negative NodeIDs
       if( NROW(competitors__) > 0 ){
-        competitors__$NodeID <- -1:(-NROW(competitors__))
-        
         splits__ <- rbind( splits__, competitors__ )
-      }   
+      }
+      
     }
     
     # Rename MeanResponse to Mean_Inbag_Response
@@ -1299,7 +1298,7 @@ equal <- function( x, y, verbose = FALSE ){
     rownames( ydistribution ) <- NULL
 
     # If distribution extracts to a matrix
-    if( class( xdistribution_unlist ) == "matrix" ){
+    if( is( xdistribution_unlist, "matrix" ) ){
 
       if( length( setdiff( names( xdistribution ), names( ydistribution ) ) ) != 0 ){
         if( verbose )
@@ -1319,7 +1318,7 @@ equal <- function( x, y, verbose = FALSE ){
       rm( d )
     }
     # If distribution extracts to a vector
-    if( class( xdistribution_unlist ) == "numeric" ){
+    if( is( xdistribution_unlist,"numeric" ) ){
       
       names(xdistribution) <- 'x'
       xdistribution$distributions <- names( xdistribution_unlist )

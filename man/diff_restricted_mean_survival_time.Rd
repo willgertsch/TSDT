@@ -4,8 +4,7 @@
 \alias{diff_restricted_mean_survival_time}
 \title{diff_restricted_mean_survival_time}
 \usage{
-diff_restricted_mean_survival_time(data,
-  scoring_function_parameters = NULL)
+diff_restricted_mean_survival_time(data, scoring_function_parameters = NULL)
 }
 \arguments{
 \item{data}{data.frame containing response data}

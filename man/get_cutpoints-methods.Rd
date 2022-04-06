@@ -10,11 +10,9 @@
 \usage{
 get_cutpoints(.Object, subgroup, subsub = NULL)
 
-\S4method{get_cutpoints}{TSDT_CutpointDistribution}(.Object,
-  subgroup = character, subsub = NULL)
+\S4method{get_cutpoints}{TSDT_CutpointDistribution}(.Object, subgroup = character, subsub = NULL)
 
-\S4method{get_cutpoints}{TSDT}(.Object, subgroup = character,
-  subsub = NULL)
+\S4method{get_cutpoints}{TSDT}(.Object, subgroup = character, subsub = NULL)
 }
 \arguments{
 \item{.Object}{A TSDT object.}

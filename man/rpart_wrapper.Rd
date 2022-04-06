@@ -4,8 +4,13 @@
 \alias{rpart_wrapper}
 \title{rpart_wrapper}
 \usage{
-rpart_wrapper(response, response_type = NULL, covariates = NULL,
-  tree_builder_parameters = NULL, prune = FALSE)
+rpart_wrapper(
+  response,
+  response_type = NULL,
+  covariates = NULL,
+  tree_builder_parameters = NULL,
+  prune = FALSE
+)
 }
 \arguments{
 \item{response}{Response variable to use in rpart model.}
