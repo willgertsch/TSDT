@@ -1,7 +1,7 @@
 Package: TSDT
 Type: Package
 Title: Treatment-Specific Subgroup Detection Tool
-Version: 1.0.7
+Version: 1.0.8
 Date: 2022-04-06
 Authors@R: c(
   person(family = "Battioui",
