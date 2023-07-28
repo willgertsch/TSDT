@@ -3,23 +3,23 @@
 # FILENAME   : TSDT_scoring_functions.R
 # AUTHOR     : Brian Denton <denton_brian_david@lilly.com>
 # DATE       : 09/24/2013
-# DESCRIPTION: 
+# DESCRIPTION:
 #################################################################################
 
 scoring_function_wrapper <- function( scoring_function_name, data, scoring_function_parameters = NULL ){
 
   ## Create NULL placeholders to prevent NOTE in R CMD check
   result <- NULL;rm( result )
-  
+
   scoring_function_text <- paste0( 'result <- ', scoring_function_name, '( data' )
 
   if( !is.null( scoring_function_parameters ) )
       scoring_function_text <- paste0( scoring_function_text, ', scoring_function_parameters' )
 
   scoring_function_text <- paste0( scoring_function_text, ' )' )
-  
+
   eval( parse( text = scoring_function_text ) )
-                   
+
   return( result )
 }
 
@@ -36,17 +36,17 @@ scoring_function_wrapper <- function( scoring_function_name, data, scoring_funct
 #' @return The mean of the provided response variable.
 #' @examples
 #' N <- 50
-#' 
+#'
 #' data <- data.frame( continuous_response = numeric(N),
 #'                    trt = character(N) )
-#' 
+#'
 #' data$continuous_response <- runif( min = 0, max = 20, n = N )
 #' data$trt <- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6), replace = TRUE )
-#' 
+#'
 #' ## Compute mean response for all data
 #' mean_response( data, scoring_function_parameters = list( y_var = 'continuous_response' ) )
 #' mean( data$continuous_response ) # Function return value should match this value
-#' 
+#'
 #' ## Compute mean response for Experimental treatment arm only
 #' scoring_function_parameters <- list( y_var = 'continuous_response', trt_arm = 'Experimental' )
 #' mean_response( data, scoring_function_parameters = scoring_function_parameters )
@@ -58,7 +58,7 @@ mean_response <- function( data,
 
   ## Create NULL placeholders to prevent NOTE in R CMD check
   trt_arm <- NULL;rm( trt_arm )
-  
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
 
@@ -73,7 +73,7 @@ mean_response <- function( data,
   }else{
     if( !any( trt == trt_arm ) )
         stop( "ERROR: trt_arm value not found" )
-        
+
     if( !exists( "trt_arm" ) ){
       if( "WEIGHTS__" %nin% names( data ) )
           return( mean( response[ trt == trt_arm ], na.rm = TRUE ) )
@@ -102,15 +102,15 @@ mean_response <- function( data,
 #' names( df )  <- "y"
 #' df$trt <- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6),
 #'                   replace = TRUE )
-#' 
+#'
 #' ## Default behavior is to return the median
 #' quantile_response( df )
 #' median( df$y ) # should match previous result from quantile_response
-#' 
+#'
 #' ## Get Q1 response
 #' quantile_response( df, scoring_function_parameters = list( percentile = 0.25 ) )
 #' quantile( df$y, 0.25 ) # should match previous result from quantile_response
-#' 
+#'
 #' ## Get max response
 #' quantile_response( df, scoring_function_parameters = list( percentile = 1 ) )
 #' max( df$y ) # should match previous result from quantile_response
@@ -120,26 +120,26 @@ quantile_response <- function( data,
 
   ## Create NULL placeholders to prevent NOTE in R CMD check
   trt_arm  <- NULL;rm( trt_arm )
-  
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
-  
+
   if( !exists( "percentile" ) )
       percentile <- 0.50
-  
+
   response <- get_y( data, scoring_function_parameters )
-  
+
   trt <- get_trt( data, scoring_function_parameters )
-  
+
   if( !exists( "trt_arm" ) ){
     return( quantile( response, probs = percentile ) )
   }
   else{
     if( !any( trt == trt_arm ) )
         stop( "ERROR: trt_arm value not found" )
-    
+
     return( quantile( response[ trt == trt_arm ], probs = percentile ) )
-  }  
+  }
 }
 
 
@@ -161,19 +161,19 @@ quantile_response <- function( data,
 #' names( df )  <- "y"
 #' df$trt <- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6),
 #'                   replace = TRUE )
-#' 
+#'
 #' ## Default behavior is to return the median
 #' diff_quantile_response( df )
-#' 
+#'
 #' # should match previous result from quantile_response
 #' median( df$y[df$trt!='Control'] ) - median( df$y[df$trt=='Control'] )
-#' 
+#'
 #' ## Get Q1 response
 #' diff_quantile_response( df, scoring_function_parameters = list( percentile = 0.25 ) )
 #'
 #' # should match previous result from quantile_response
 #' quantile( df$y[df$trt!='Control'], 0.25 ) - quantile( df$y[df$trt=='Control'], 0.25 )
-#' 
+#'
 #' ## Get max response
 #' diff_quantile_response( df, scoring_function_parameters = list( percentile = 1 ) )
 #'
@@ -182,24 +182,24 @@ quantile_response <- function( data,
 #' @export
 diff_quantile_response <- function( data,
                                     scoring_function_parameters = NULL ){
-  
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
-  
+
   if( !exists( "trt_control" ) )
       trt_control <- 'Control'
-  
+
   trt <- get_trt( data, scoring_function_parameters )
-  
+
   if( !any( trt == trt_control ) )
     stop( paste0( 'ERROR: trt_control value (', trt_control, ') not found in trt variable' ) )
-  
+
   scoring_function_parameters$trt_arm <- trt_control
   quantile_control <- quantile_response( data, scoring_function_parameters )
-  
+
   scoring_function_parameters$trt_arm <- get_experimental_trt_arm( trt, trt_control )
   quantile_trt <- quantile_response( data, scoring_function_parameters )
-  
+
   return( quantile_trt - quantile_control )
 }
 
@@ -216,31 +216,31 @@ diff_quantile_response <- function( data,
 #' @return The difference in mean response across treatment arms.
 #' @examples
 #' N <- 100
-#' 
+#'
 #' df <- data.frame( continuous_response = numeric(N),
 #'                   trt = integer(N) )
-#' 
+#'
 #' df$continuous_response <- runif( min = 0, max = 20, n = N )
 #' df$trt <- sample( c(0,1), size = N, prob = c(0.4,0.6), replace = TRUE )
-#' 
+#'
 #' # Compute the treatment effect
 #' treatment_effect( df, list( y_var = 'continuous_response', trt_control = 0 ) )
-#' 
+#'
 #' # Function return value should match this value
 #' mean( df$continuous_response[df$trt == 1] ) - mean( df$continuous_response[df$trt == 0] )
 #' @export
 treatment_effect <- function( data,
                               scoring_function_parameters = NULL ){
-    
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
-  
+
   response <- get_y( data, scoring_function_parameters )
   trt <- get_trt( data, scoring_function_parameters )
-  
+
   if( !exists( "trt_control" ) )
       trt_control <- 'Control'
-  
+
   if( !any( trt == trt_control ) )
       stop( paste0( 'ERROR: trt_control value (', trt_control, ') not found in trt variable' ) )
   if( "WEIGHTS__" %nin% names( data ) ){
@@ -250,7 +250,7 @@ treatment_effect <- function( data,
     mean_trt_response <- weighted.mean( response[ trt != trt_control ], w = data$WEIGHTS__[ trt != trt_control ], na.rm = TRUE )
     mean_control_response <- weighted.mean( response[ trt == trt_control ], w = data$WEIGHTS__[ trt == trt_control ], na.rm = TRUE )
   }
-  return( mean_trt_response - mean_control_response )  
+  return( mean_trt_response - mean_control_response )
 }
 
 
@@ -268,27 +268,27 @@ treatment_effect <- function( data,
 ## #' desirable value is 0 if desirable_response = 'decreasing'.
 ## #' @examples
 ## #' N <- 50
-## #' 
+## #'
 ## #' data <- data.frame( binary_response = numeric(N) )
-## #' 
+## #'
 ## #' data$binary_response <- sample( c(0,1), size = N, prob = c(0.3,0.7), replace = TRUE )
-## #' 
+## #'
 ## #' ## Compute desirable response proportion with increasing desirable response
 ## #' ## (i.e. larger response value is better)
-## #' 
+## #'
 ## #' desirable_response_proportion( data, list( y_var = 'binary_response', desirable_response = 'increasing' ) )
 ## #' mean( data$binary_response ) # Function return value should match this value
 ## #'
-## #' 
+## #'
 ## #' ## Compute desirable response proportion for Experimental treatment arm only
 ## #' ## with decreasing desirable response (i.e. smaller response value is better).
 ## #'
 ## #' data$trt <- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6), replace = TRUE )
-## #' 
+## #'
 ## #' desirable_response_proportion( data, list( y_var = 'binary_response', desirable_response = 'decreasing', trt_control = 'Control' ) )
 ## #'
 ## #' prop.table( table( subset( data, trt != 'Control', select = 'binary_response', drop = TRUE ) ) )
-## #' 
+## #'
 ## #' @export
 ## desirable_response_proportion <- function( data,
 ##                                            scoring_function_parameters = NULL ){
@@ -298,13 +298,13 @@ treatment_effect <- function( data,
 
 ##   response <- binary_transform( get_y( data, scoring_function_parameters ) )
 ##   trt <- get_trt( data, scoring_function_parameters )
-  
+
 ##   if( desirable_response %nin% c("increasing","decreasing") )
-##       stop( "ERROR: desirable_response must be in {increasing,decreasing}" )      
+##       stop( "ERROR: desirable_response must be in {increasing,decreasing}" )
 
 ##   if( !is.null( trt ) && !exists( "trt_control" ) )
 ##       stop( "ERROR: if a treatment variable is present in data a trt_control value must be provided in scoring_function_parameters" )
-  
+
 ##   # For computing the proportion when no treatment variable is provided
 ##   #if( !exists( "trt_var" ) ){
 ##   if( is.null( trt ) ){
@@ -313,7 +313,7 @@ treatment_effect <- function( data,
 ##     # be handled by the superior_subgrous() function.
 
 ##     N <- length( response )
-    
+
 ##     if( desirable_response == "increasing" ){
 ##       proportion <- length( subset( response, response == 1 ) )/N
 ##     }else{
@@ -322,24 +322,24 @@ treatment_effect <- function( data,
 ##   }
 ##   # For computing the proportion only on the treatment arm
 ##   else{
-    
+
 ##     response <- subset( response, trt != trt_control )
 ##     N <- length( response )
-    
+
 ##     if( desirable_response == "increasing" ){
 ##       response <- subset( response, response == 1 )
 ##     }else{ #decreasing
 ##       response <- subset( response, response == 0 )
 ##     }
-##     proportion <- length( response )/N 
-##   } 
+##     proportion <- length( response )/N
+##   }
 ##   return( proportion )
 ## }
 
 #################################################################################
 # Scoring functions for a survival outcome: difference in median (or other      #
 # quantile) survival time.                                                      #
-################################################################################# 
+#################################################################################
 #' @title survival_time_quantile
 #' @description Computes the quantile of a survival function.
 #' @details Computes the quantile of a survival function. The user specifies the
@@ -347,7 +347,7 @@ treatment_effect <- function( data,
 #' scoring_function_parameters. The default is percentile = 0.50, which returns
 #' the median survival. A user may also specify a value for the trt_arm parameter
 #' in scoring_function_parameters to compute the survival quantile for only one
-#' arm.     
+#' arm.
 #' @seealso \link{TSDT}, \link{diff_survival_time_quantile},
 #' \link[survival]{Surv}, \link[survival]{coxph}, \link[survival]{survfit},
 #' \link[survival]{survreg}, \link[survival]{quantile.survfit},
@@ -361,13 +361,13 @@ treatment_effect <- function( data,
 #' event <- sample( c(0,1), size = N, prob = c(0.2,0.8), replace = TRUE )
 #' trt <- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6), replace = TRUE )
 #' df <- data.frame( y = survival::Surv( time, event ), trt = trt )
-#' 
+#'
 #' ## Compute median survival time in Experimental treatment arm.
 #' ex1 <- survival_time_quantile( data = df,
 #'                                scoring_function_parameters = list( trt_var = "trt",
 #'                                trt_arm = "Experimental",
 #'                                percentile = 0.50 ) )
-#' 
+#'
 #' ## Compute Q1 survival time for all data. It is necessary here to explicitly
 #' ## specify trt = NULL because a variable called trt exists in df. The default
 #' ## behavior is to use this variable as the treatment variable. To override
@@ -376,52 +376,51 @@ treatment_effect <- function( data,
 #'                                scoring_function_parameters = list( trt = NULL, percentile = 0.25 ) )
 #' @export
 survival_time_quantile <- function( data,
-                                    scoring_function_parameters = NULL ){ 
-  
+                                    scoring_function_parameters = NULL ){
+
   requireNamespace( "survival", quietly = TRUE )
-  
+
   ## Create NULL placeholders to prevent NOTE in R CMD check
   trt_control <- NULL;rm( trt_control )
-  
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
-  
+
   # Cox proportional hazard
   COXPH_MODELS <- "coxph"
-  
+
   # Non-parametric and semi-parametric models
   SURVFIT_MODELS <- c("kaplan-meier","fleming-harrington","fh2")
-  
+
   # Parametric models
   SURVREG_MODELS <- c("weibull","exponential","gaussian","logistic",
                       "lognormal","loglogistic")
 
   MODEL_SET <- paste( c( COXPH_MODELS, SURVFIT_MODELS, SURVREG_MODELS ), sep = "", collapse = "," )
-  
+
   # Validate input parameters and define default values
   if( !exists( "survival_model" ) )
       survival_model <- "kaplan-meier" # Compute Kaplan-Meier estimator by default
 
   if( !exists( "percentile" ) )        # Compute median survival by default
       percentile <- 0.50
-  
+
   if( survival_model %nin% c( COXPH_MODELS, SURVFIT_MODELS, SURVREG_MODELS ) )
       stop( paste0( "ERROR: survival_model is ", survival_model, ". It must be one of {", MODEL_SET, "}." ) )
-  
+
   # The class of response is changed from Surv to matrix when retrieved with
   # get_y(). Cast it back to Surv by wrapping the return value in Surv().
   response <- get_y( data, scoring_function_parameters )
-  
-  if( class( response ) != "Surv" )
-      response <- survival::Surv( response )
-  
+  if (!is(response, "Surv"))
+    response <- survival::Surv( response )
+
   trt <- get_trt( data, scoring_function_parameters )
 
   # If no trt_arm is provided for which arm to fit the survival model on then
   # assume the experimental arm.
   if( !is.null( trt ) && !exists("trt_arm") )
     trt_arm <- as.character( trt[ trt != trt_control ][[1]] )
-  
+
   # Construct Surv object for the survival model formula
   if( !is.null( trt ) ){
     # It is neccessary to re-create the Surv object after subsetting
@@ -433,7 +432,7 @@ survival_time_quantile <- function( data,
   surv_formula_y <- 'response ~ '
   surv_formula_X <- '1'
   SURV_FORMULA <- as.formula( paste0( surv_formula_y, surv_formula_X ) )
-  
+
   # Compute survival model
   if( survival_model %in% COXPH_MODELS ){
     surv <- survival::survfit( coxph( formula = SURV_FORMULA ), se.fit = FALSE, control = survival::coxph.control( iter.max = 1E4 ) )
@@ -442,16 +441,16 @@ survival_time_quantile <- function( data,
   }else if( survival_model %in% SURVREG_MODELS ){
     surv <- survival::survreg( formula = SURV_FORMULA, dist = survival_model, control = survival::survreg.control( iter.max = 1E3 ) )
   }
-  
+
   # Get survival function quantile for specified percentile
   if( survival_model %in% c( COXPH_MODELS, SURVFIT_MODELS ) ){
-    
+
     quantile__ <- quantile( surv, probs = percentile )
-    
+
     survival_time_quantile <- NA
-    
+
     if( class( quantile__ ) != "logical" ){
-      
+
       if( is( quantile__, "numeric" ) ){
         survival_time_quantile <- quantile__
       }else{
@@ -459,23 +458,23 @@ survival_time_quantile <- function( data,
       }
     }# END if quantile__ != logical
   }
-    
+
   else if( survival_model %in% c( SURVREG_MODELS ) ){
     survival_time_quantile <- predict( surv, type = "quantile", p = percentile )[[1]]
   }
-  
+
   # Return quantile
   return( survival_time_quantile )
 }
 
-#' @title diff_survival_time_quantile 
+#' @title diff_survival_time_quantile
 #' @description Computes the difference in the quantile of a survival function
 #' across treatment groups.
 #' @details Computes the survival function quantile for the treatment and
 #' control arms and returns the difference.
 #' @seealso \link{TSDT}, \link{survival_time_quantile}, \link[survival]{Surv},
 #' \link[survival]{coxph}, \link[survival]{survfit}, \link[survival]{survreg},
-#' \link[survival]{predict.coxph}, \link[survival]{predict.survreg} 
+#' \link[survival]{predict.coxph}, \link[survival]{predict.survreg}
 #' @param data data.frame containing response data
 #' @param scoring_function_parameters named list of scoring function control parameters
 #' @return A difference in a survival time quantile across treatment arms.
@@ -486,7 +485,7 @@ survival_time_quantile <- function( data,
 #'                             sample( c(0,1), size = N, prob = c(0.2,0.8), replace = TRUE ) ),
 #'                   trt = sample( c('Control','Experimental'), size = N,
 #'                                 prob = c(0.4,0.6), replace = TRUE ) )
-#' 
+#'
 #' ## Compute difference in median survival time between Experimental arm and
 #' ## Control arm.  It is not actually necessary to provide the value for the
 #' ## time_var, trt_var, trt_control, and percentile parameters because these
@@ -496,7 +495,7 @@ survival_time_quantile <- function( data,
 #'                                     scoring_function_parameters = list( trt_var = "trt",
 #'                                     trt_control = "Control",
 #'                                     percentile = 0.50 ) )
-#' 
+#'
 #' ## Compute difference in Q1 survival time. In this example the default value
 #' ## for all scoring function parameters are used except percentile, which here
 #' ## takes the value 0.25.
@@ -505,31 +504,31 @@ survival_time_quantile <- function( data,
 #' @export
 diff_survival_time_quantile <- function( data,
                                          scoring_function_parameters = NULL ){
-  
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
-  
+
   # Get treatment variable and control and experimental treatment values
   trt <- get_trt( data, scoring_function_parameters )
-  
+
   if( is.null( trt ) )
       stop( "ERROR: trt variable not specified" )
-  
+
   if( !exists( "trt_control" ) )
       trt_control <- 'Control'
-  
+
   experimental_trt_value <- as.character( trt[ trt != trt_control ][[1]] )
-  
+
   # Get survival quantile for control arm
   scoring_function_parameters$trt_arm <- trt_control
   survival_time_control <- survival_time_quantile( data, scoring_function_parameters )
-  
+
   # Get survival quantile for experimental arm
   scoring_function_parameters$trt_arm <- experimental_trt_value
   survival_time_trt <- survival_time_quantile( data, scoring_function_parameters )
-  
+
   difference <- survival_time_trt - survival_time_control
-  
+
   return( difference )
 }
 
@@ -571,7 +570,7 @@ mean_deviance_residuals <- function( data,
 
   ## Create NULL placeholders to prevent NOTE in R CMD check
   trt_control <- NULL;rm( trt_control )
-  
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
 
@@ -583,11 +582,11 @@ mean_deviance_residuals <- function( data,
                        "lognormal", "loglogistic")
 
   MODEL_SET <- paste( c( COXPH_MODELS, SURVREG_MODELS ), sep = "", collapse = "," )
-  
+
   # Validate input parameters and define default values
   if( !exists( "survival_model" ) )
       survival_model <- "coxph"    # Fit Cox Proportional Hazards model by default
-  
+
   if( survival_model %nin% c( COXPH_MODELS, SURVREG_MODELS ) )
       stop( paste0( "ERROR: survival_model is ", survival_model,". To use ",
                     "mean_deviance_residuals as the scoring function survival_model must ",
@@ -597,42 +596,42 @@ mean_deviance_residuals <- function( data,
   # The class of response is changed from Surv to matrix when retrieved with
   # get_y(). Cast it back to Surv by wrapping the return value in Surv().
   response <- get_y( data, scoring_function_parameters )
-  if( class( response ) != "Surv" )
-      response <- survival::Surv( response )
-  
+  if (!is(response, "Surv"))
+    response <- survival::Surv( response )
+
   trt <- get_trt( data, scoring_function_parameters )
 
   # If no trt_arm is provided for which arm to fit the survival model on then
   # assume the experimental arm.
   if( !is.null( trt ) && !exists("trt_arm") )
     trt_arm <- as.character( trt[ trt != trt_control ][[1]] )
-  
+
   # Construct Surv object for the survival model formula
   if( is.null( trt ) ){
     surv_formula_y <- 'response ~ '
   }else{
     surv_formula_y <- 'response[trt==trt_arm] ~ '
   }
-  
+
   COVARS <- names( covariates )
-    
+
   df <- as.data.frame( covariates )
   names( df ) <- COVARS
 
   surv_formula_X <- '1'
-  
+
   SURV_FORMULA <- as.formula( paste0( surv_formula_y, surv_formula_X ) )
 
   # Compute survival model
   if( survival_model %in% COXPH_MODELS )
     surv <- survival::coxph( formula = SURV_FORMULA, control = survival::coxph.control( iter.max = 1E3 )  )
-     
+
   else if( survival_model %in% SURVREG_MODELS )
     surv <- survival::survreg( formula = SURV_FORMULA, dist = survival_model, control = survival::survreg.control( iter.max = 1E3 ) )
-  
+
   # Get deviance residuals
   deviance_residuals <- residuals( surv, type  = "deviance" )
-  
+
   # Return mean of deviance residuals
   return( mean( deviance_residuals, na.rm = TRUE ) )
 }
@@ -669,19 +668,19 @@ mean_deviance_residuals <- function( data,
 diff_mean_deviance_residuals <- function( data,
                                          scoring_function_parameters = NULL ){
   requireNamespace( "survival", quietly = TRUE )
-  
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
-          
+
   # Get treatment variable and control and experimental treatment values
   trt <- get_trt( data, scoring_function_parameters )
-  
+
   if( is.null( trt ) )
       stop( "ERROR: trt variable not specified" )
 
   if( !exists( "trt_control" ) )
     trt_control <- 'Control'
-  
+
   experimental_trt_value <- as.character( trt[ trt != trt_control ][[1]] )
 
   # Get survival quantile for control arm
@@ -691,9 +690,9 @@ diff_mean_deviance_residuals <- function( data,
   # Get survival quantile for experimental arm
   scoring_function_parameters$trt_arm <- experimental_trt_value
   mean_deviance_residuals_trt <- mean_deviance_residuals( data, scoring_function_parameters )
-  
+
   difference <- mean_deviance_residuals_trt - mean_deviance_residuals_control
-  
+
   return( difference )
 }
 
@@ -709,27 +708,26 @@ diff_mean_deviance_residuals <- function( data,
 #' @export
 diff_restricted_mean_survival_time <- function( data,
                                                scoring_function_parameters = NULL ){
-  
+
   requireNamespace( "survRM2", quietly = TRUE )
-  
+
   if( !is.null( scoring_function_parameters ) )
       unpack_args( scoring_function_parameters )
   # The class of response is changed from Surv to matrix when retrieved with
   # get_y(). Cast it back to Surv by wrapping the return value in Surv().
   response <- get_y( data, scoring_function_parameters )
-  
-  if( class( response ) != "Surv" )
-      response <- survival::Surv( response )
-  
+  if (!is(response, "Surv"))
+    response <- survival::Surv( response )
+
   # Get treatment variable and control and experimental treatment values
   trt <- get_trt( data, scoring_function_parameters )
-  
+
   if( is.null( trt ) )
       stop( "ERROR: trt variable not specified" )
 
   if( !exists( "trt_control" ) )
     trt_control <- 'Control'
-  
+
   experimental_trt_value <- as.character( trt[ trt != trt_control ][[1]] )
 
   rmst <- rmst2( time = response[,1],
@@ -737,7 +735,7 @@ diff_restricted_mean_survival_time <- function( data,
                  arm = ifelse( trt != trt_control, 1, 0 ) )
 
   difference <- rmst$unadjusted.result['RMST (arm=1)-(arm=0)','Est.']
-  
+
   return( difference )
 }
 
@@ -757,16 +755,15 @@ hazard_ratio <- function( data,
   # The class of response is changed from Surv to matrix when retrieved with
   # get_y(). Cast it back to Surv by wrapping the return value in Surv().
   response <- get_y( data, scoring_function_parameters )
-  
-  if( class( response ) != "Surv" )
-      response <- survival::Surv( response )
-  
+  if (!is(response, "Surv"))
+    response <- survival::Surv( response )
+
   # Get treatment variable and control and experimental treatment values
   trt <- get_trt( data, scoring_function_parameters )
-  
+
   if( is.null( trt ) )
       stop( "ERROR: trt variable not specified" )
-  
+
   if( !exists( "trt_control" ) )
       trt_control <- 'Control'
 
@@ -776,7 +773,7 @@ hazard_ratio <- function( data,
   hazard_ratio__ <- tryCatch( exp( survival::coxph( response ~ trt )$coefficients[1] ),
                               warning = function(w){return(NA)},
                               error = function(e){stop(e)})
-  
+
   return( hazard_ratio__ )
 }
 
